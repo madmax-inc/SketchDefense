@@ -1,4 +1,4 @@
-package org.m3studio.gameengine;
+package org.m3studio.gameengine.core;
 
 public abstract class Scene extends Thread {
 	private Engine engine;
@@ -20,10 +20,6 @@ public abstract class Scene extends Thread {
 		onSceneRun();
 		
 		onSceneEnd();
-	}
-	
-	public interface SceneEventListener {
-		public void onSceneEnd();
 	}
 
 }

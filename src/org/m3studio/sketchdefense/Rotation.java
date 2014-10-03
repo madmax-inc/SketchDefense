@@ -1,9 +1,9 @@
 package org.m3studio.sketchdefense;
 
-import org.m3studio.gameengine.Animation;
-import org.m3studio.gameengine.GameObject;
-import org.m3studio.gameengine.Interpolator;
-import org.m3studio.gameengine.Vector;
+import org.m3studio.gameengine.core.Animation;
+import org.m3studio.gameengine.core.GameObject;
+import org.m3studio.gameengine.core.Interpolator;
+import org.m3studio.gameengine.core.Vector;
 
 public class Rotation extends Animation {
 	Interpolator rotationInterpolator;

@@ -1,8 +1,10 @@
-package org.m3studio.gameengine;
+package org.m3studio.gameengine.core;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.TreeSet;
+
+import org.m3studio.gameengine.utils.TouchCameraControlller;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -178,16 +180,13 @@ public class Engine implements SurfaceHolder.Callback, OnTouchListener {
 		for (Iterator<VisibleGameObject> it = objectsRenderingPipeline.iterator(); it.hasNext();) {
 			VisibleGameObject object = it.next();
 
-			Sprite sprite = object.getSprite();
-			int frameNum = object.getFrameNum();
-
-			Bitmap spriteBitmap = sprite.getBitmap(frameNum);
+			Bitmap objectBitmap = object.getBitmap();
 
 			Matrix matrix = object.getMatrix();
 
 			matrix.postConcat(projection);
 
-			canvas.drawBitmap(spriteBitmap, matrix, null);
+			canvas.drawBitmap(objectBitmap, matrix, null);
 		}
 		
 		

@@ -1,4 +1,4 @@
-package org.m3studio.gameengine;
+package org.m3studio.gameengine.core;
 
 public class Vector {
 	public float x;
@@ -14,7 +14,7 @@ public class Vector {
 		this.y = b.y;
 	}
 	
-	Vector(Vector a, Vector b) {
+	public Vector(Vector a, Vector b) {
 		this.x = b.x - a.x;
 		this.y = b.y - a.y;
 	}

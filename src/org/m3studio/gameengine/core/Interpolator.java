@@ -1,15 +1,15 @@
-package org.m3studio.gameengine;
+package org.m3studio.gameengine.core;
 
 import java.util.ArrayList;
 
 public abstract class Interpolator {
 	private ArrayList<Vector> points;
 	
-	Interpolator(ArrayList<Vector> points) {
+	protected Interpolator(ArrayList<Vector> points) {
 		this.points = points;
 	}
 	
-	Interpolator() {
+	protected Interpolator() {
 		this(new ArrayList<Vector>());
 	}
 	

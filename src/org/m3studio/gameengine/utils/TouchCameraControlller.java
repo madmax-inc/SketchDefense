@@ -1,4 +1,8 @@
-package org.m3studio.gameengine;
+package org.m3studio.gameengine.utils;
+
+import org.m3studio.gameengine.core.GameCameraObject;
+import org.m3studio.gameengine.core.TouchHandler;
+import org.m3studio.gameengine.core.Vector;
 
 import android.view.MotionEvent;
 

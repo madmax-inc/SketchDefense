@@ -1,4 +1,4 @@
-package org.m3studio.gameengine;
+package org.m3studio.gameengine.core;
 
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;

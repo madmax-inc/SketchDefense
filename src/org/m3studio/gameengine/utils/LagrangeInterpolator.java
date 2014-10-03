@@ -1,6 +1,9 @@
-package org.m3studio.gameengine;
+package org.m3studio.gameengine.utils;
 
 import java.util.ArrayList;
+
+import org.m3studio.gameengine.core.Interpolator;
+import org.m3studio.gameengine.core.Vector;
 
 public class LagrangeInterpolator extends Interpolator {
 

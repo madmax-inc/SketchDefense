@@ -1,6 +1,7 @@
-package org.m3studio.gameengine;
+package org.m3studio.gameengine.core;
 
-import org.m3studio.gameengine.Vector;
+import org.m3studio.gameengine.core.Vector;
+
 import android.graphics.Matrix;
 
 public class GameObject implements Comparable<GameObject> {

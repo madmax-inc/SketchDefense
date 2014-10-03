@@ -1,4 +1,4 @@
-package org.m3studio.gameengine;
+package org.m3studio.gameengine.core;
 
 import java.util.ArrayList;
 import java.util.Collection;

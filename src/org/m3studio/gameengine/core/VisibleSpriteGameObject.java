@@ -1,12 +1,15 @@
-package org.m3studio.gameengine;
+package org.m3studio.gameengine.core;
 
+import org.m3studio.gameengine.utils.BasicFramesAnimation;
+import org.m3studio.gameengine.utils.LagrangeInterpolator;
 import org.m3studio.sketchdefense.Rotation;
 import org.m3studio.sketchdefense.Scale;
 
+import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 
-public class VisibleGameObject extends GameObject {
+public class VisibleSpriteGameObject extends VisibleGameObject {
 	private Sprite sprite;
 	private BasicFramesAnimation animation;
 	private int frameNum;
@@ -14,7 +17,7 @@ public class VisibleGameObject extends GameObject {
 	//Event Dispatch
 	private boolean isTouched;
 	
-	public VisibleGameObject(Sprite sprite, Vector position, float z) {
+	public VisibleSpriteGameObject(Sprite sprite, Vector position, float z) {
 		super(position, z);
 		this.sprite = sprite;
 		this.frameNum = 0;
@@ -23,7 +26,7 @@ public class VisibleGameObject extends GameObject {
 		animation = new BasicFramesAnimation(0.6f, this, LagrangeInterpolator.class, true);
 	}
 	
-	public VisibleGameObject(Sprite sprite) {
+	public VisibleSpriteGameObject(Sprite sprite) {
 		this(sprite, new Vector(0, 0), 0.0f);
 	}
 		
@@ -35,6 +38,12 @@ public class VisibleGameObject extends GameObject {
 		return frameNum;
 	}
 	
+	@Override
+	public Bitmap getBitmap() {
+		return sprite.getBitmap(frameNum);
+	}
+	
+	@Override
 	public Rect getBoundingRect() {
 		Vector position = getPosition();
 		float scale = getScale();
@@ -70,24 +79,10 @@ public class VisibleGameObject extends GameObject {
 		this.getEngine().removeAnimation(animation);
 	}
 	
+	@Override
 	public boolean isPointInside(Vector position) {
 		//TODO
 		return true;
-	}
-	
-	public void touch() {
-		isTouched = true;
-	}
-	
-	@Override
-	public void dispatchEvents() {
-		super.dispatchEvents();
-		
-		if (isTouched) {
-			isTouched = false;
-			
-			onTouch();
-		}
 	}
 	
 	@Override
@@ -105,6 +100,7 @@ public class VisibleGameObject extends GameObject {
 	}
 	
 	//Events
+	@Override
 	protected void onTouch() {
 		Animation animation;
 		

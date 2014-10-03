@@ -1,11 +1,11 @@
 package org.m3studio.sketchdefense;
 
-import org.m3studio.gameengine.Background;
-import org.m3studio.gameengine.Engine;
-import org.m3studio.gameengine.ResourceFactory;
-import org.m3studio.gameengine.Sprite;
-import org.m3studio.gameengine.Vector;
-import org.m3studio.gameengine.VisibleGameObject;
+import org.m3studio.gameengine.core.Background;
+import org.m3studio.gameengine.core.Engine;
+import org.m3studio.gameengine.core.ResourceFactory;
+import org.m3studio.gameengine.core.Sprite;
+import org.m3studio.gameengine.core.Vector;
+import org.m3studio.gameengine.core.VisibleSpriteGameObject;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -26,7 +26,7 @@ public class MainActivity extends Activity {
 		int count = 15;
 		
 		for (int i = 0; i < count; i++) {
-			VisibleGameObject obj = new VisibleGameObject(hero, new Vector((float) (Math.random() * 1500), (float) (Math.random() * 1000)), 0.0f);
+			VisibleSpriteGameObject obj = new VisibleSpriteGameObject(hero, new Vector((float) (Math.random() * 1500), (float) (Math.random() * 1000)), 0.0f);
 			obj.setScale(2);
 			
 			engine.addVisibleGameObject(obj);

@@ -1,18 +1,18 @@
-package org.m3studio.gameengine;
+package org.m3studio.gameengine.core;
 
 import java.util.ArrayList;
 
-public class AnimationThread extends Thread {
-	private ArrayList<Animation> animationsList;
-	private CollectionBuffer<Animation> animationsListBuffer;
+public class GameObjectThread extends Thread {
+	private ArrayList<GameObject> gameObjectsList;
+	private CollectionBuffer<GameObject> gameObjectsListBuffer;
 	private Object globalObjectsMutex;
 	private boolean isRunning;
 	private boolean isPaused;
 
-	AnimationThread(ArrayList<Animation> animationsList, CollectionBuffer<Animation> animationsListBuffer, Object globalObjectsMutex) {
+	GameObjectThread(ArrayList<GameObject> gameObjectsList, CollectionBuffer<GameObject> gameObjectsListBuffer, Object globalObjectsMutex) {
 		super();
-		this.animationsList = animationsList;
-		this.animationsListBuffer = animationsListBuffer;
+		this.gameObjectsList = gameObjectsList;
+		this.gameObjectsListBuffer = gameObjectsListBuffer;
 		this.globalObjectsMutex = globalObjectsMutex;
 		this.isRunning = false;
 		this.isPaused = false;
@@ -50,19 +50,20 @@ public class AnimationThread extends Thread {
 			long stepValue = (System.currentTimeMillis() - lastUpdate);
 			lastUpdate = System.currentTimeMillis();
 			
-			synchronized (animationsList) {
+			synchronized (gameObjectsList) {
 				synchronized (globalObjectsMutex) {
-					int arraySize = animationsList.size();
+					int arraySize = gameObjectsList.size();
 					
 					for (int i = 0; i < arraySize; i++) {
-						Animation o = animationsList.get(i);
-					
+						GameObject o = gameObjectsList.get(i);
+						
+						o.dispatchEvents();
 						o.update(stepValue);
 					}
 				}
 			}
 			
-			animationsListBuffer.doUpdate(animationsList);
+			gameObjectsListBuffer.doUpdate(gameObjectsList);
 		}
 	}
 }
