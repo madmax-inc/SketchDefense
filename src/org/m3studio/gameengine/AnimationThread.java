@@ -4,13 +4,15 @@ import java.util.ArrayList;
 
 public class AnimationThread extends Thread {
 	private ArrayList<Animation> animationsList;
+	private CollectionBuffer<Animation> animationsListBuffer;
 	private Object globalObjectsMutex;
 	private boolean isRunning;
 	private boolean isPaused;
 
-	AnimationThread(ArrayList<Animation> animationsList, Object globalObjectsMutex) {
+	AnimationThread(ArrayList<Animation> animationsList, CollectionBuffer<Animation> animationsListBuffer, Object globalObjectsMutex) {
 		super();
 		this.animationsList = animationsList;
+		this.animationsListBuffer = animationsListBuffer;
 		this.globalObjectsMutex = globalObjectsMutex;
 		this.isRunning = false;
 		this.isPaused = false;
@@ -59,6 +61,8 @@ public class AnimationThread extends Thread {
 					}
 				}
 			}
+			
+			animationsListBuffer.doUpdate(animationsList);
 		}
 	}
 }

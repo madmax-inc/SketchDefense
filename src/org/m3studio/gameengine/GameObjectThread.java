@@ -4,13 +4,15 @@ import java.util.ArrayList;
 
 public class GameObjectThread extends Thread {
 	private ArrayList<GameObject> gameObjectsList;
+	private CollectionBuffer<GameObject> gameObjectsListBuffer;
 	private Object globalObjectsMutex;
 	private boolean isRunning;
 	private boolean isPaused;
 
-	GameObjectThread(ArrayList<GameObject> gameObjectsList, Object globalObjectsMutex) {
+	GameObjectThread(ArrayList<GameObject> gameObjectsList, CollectionBuffer<GameObject> gameObjectsListBuffer, Object globalObjectsMutex) {
 		super();
 		this.gameObjectsList = gameObjectsList;
+		this.gameObjectsListBuffer = gameObjectsListBuffer;
 		this.globalObjectsMutex = globalObjectsMutex;
 		this.isRunning = false;
 		this.isPaused = false;
@@ -60,6 +62,8 @@ public class GameObjectThread extends Thread {
 					}
 				}
 			}
+			
+			gameObjectsListBuffer.doUpdate(gameObjectsList);
 		}
 	}
 }

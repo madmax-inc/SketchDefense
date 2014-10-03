@@ -16,12 +16,20 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 
 public class Engine implements SurfaceHolder.Callback, OnTouchListener {
+	//Collections
 	private TreeSet<VisibleGameObject> objectsRenderingPipeline;
 	private TreeSet<Background> backgroundsRenderingPipeline;
 	//private TreeSet<GuiObject> guiObjectsPipeline;
 	
 	private ArrayList<GameObject> gameObjectsPipeline;
 	private ArrayList<Animation> animationsPipeline;
+	
+	//Collections Buffers
+	private CollectionBuffer<VisibleGameObject> objectsRenderingPipelineBuffer;
+	private CollectionBuffer<Background> backgroundsRenderingPipelineBuffer;
+	//private CollectionBuffer<GuiObject> guiObjectsPipelineBuffer;
+	private CollectionBuffer<GameObject> gameObjectsPipelineBuffer;
+	private CollectionBuffer<Animation> animationsPipelineBuffer;
 	
 	private Object globalObjectsMutex;
 	
@@ -51,7 +59,7 @@ public class Engine implements SurfaceHolder.Callback, OnTouchListener {
 		view.setOnTouchListener(this);
 		
 		//Initialising resources factory
-		SpriteFactory.getInstance().setResources(context.getResources());
+		ResourceFactory.getInstance().setResources(context.getResources());
 		
 		//Creating pipelines
 		objectsRenderingPipeline = new TreeSet<VisibleGameObject>();
@@ -59,21 +67,28 @@ public class Engine implements SurfaceHolder.Callback, OnTouchListener {
 		gameObjectsPipeline = new ArrayList<GameObject>();
 		animationsPipeline = new ArrayList<Animation>();
 		
+		//Creating pipelines buffers
+		objectsRenderingPipelineBuffer = new CollectionBuffer<VisibleGameObject>();
+		backgroundsRenderingPipelineBuffer = new CollectionBuffer<Background>();
+		gameObjectsPipelineBuffer = new CollectionBuffer<GameObject>();
+		animationsPipelineBuffer = new CollectionBuffer<Animation>();
+		
 		//Creating objects mutex
 		globalObjectsMutex = new Object();
 		
 		//Creating camera object
 		cameraObject = new GameCameraObject();
+		addGameObject(cameraObject);
 		
 		//Creating touch handlers
 		touchHandlers = new ArrayList<TouchHandler>();
-		touchHandlers.add(new GameObjectTouchHandler(this, objectsRenderingPipeline, globalObjectsMutex));
+		touchHandlers.add(new GameObjectTouchHandler(objectsRenderingPipeline));
 		touchHandlers.add(new TouchCameraControlller(cameraObject));
 		
 		//Creating threads
 		drawingThread = new DrawingThread(this, limitFps, fpsLimit);
-		gameObjectThread = new GameObjectThread(gameObjectsPipeline, globalObjectsMutex);
-		animationThread = new AnimationThread(animationsPipeline, globalObjectsMutex);
+		gameObjectThread = new GameObjectThread(gameObjectsPipeline, gameObjectsPipelineBuffer, globalObjectsMutex);
+		animationThread = new AnimationThread(animationsPipeline, animationsPipelineBuffer, globalObjectsMutex);
 		
 		drawingThread.setPriority(Thread.MAX_PRIORITY);
 		gameObjectThread.setPriority(Thread.MIN_PRIORITY);
@@ -98,9 +113,7 @@ public class Engine implements SurfaceHolder.Callback, OnTouchListener {
 	
 	//Pipelines handle
 	public void addVisibleGameObject(VisibleGameObject object) {
-		synchronized(objectsRenderingPipeline) {
-			objectsRenderingPipeline.add(object);
-		}
+		objectsRenderingPipelineBuffer.add(object);
 		
 		addGameObject(object);
 	}
@@ -108,49 +121,35 @@ public class Engine implements SurfaceHolder.Callback, OnTouchListener {
 	public void addGameObject(GameObject object) {
 		object.setEngine(this);
 		
-		synchronized(gameObjectsPipeline) {
-			gameObjectsPipeline.add(object);
-		}
+		gameObjectsPipelineBuffer.add(object);
 	}
 	
 	public void addAnimation(Animation animation) {
 		animation.setEngine(this);
 		
-		synchronized(animationsPipeline) {
-			animationsPipeline.add(animation);
-		}
+		animationsPipelineBuffer.add(animation);
 	}
 	
 	public void addBackground(Background background) {
-		synchronized (backgroundsRenderingPipeline) {
-			backgroundsRenderingPipeline.add(background);
-		}
+		backgroundsRenderingPipelineBuffer.add(background);
 	}
 	
 	public void removeVisibleGameObject(VisibleGameObject object) {
-		synchronized (objectsRenderingPipeline) {
-			objectsRenderingPipeline.remove(object);
-		}
+		objectsRenderingPipelineBuffer.remove(object);
 		
 		removeGameObject(object);
 	}
 	
 	public void removeGameObject(GameObject object) {
-		synchronized (gameObjectsPipeline) {
-			gameObjectsPipeline.remove(object);
-		}
+		gameObjectsPipelineBuffer.remove(object);
 	}
 	
 	public void removeAnimation(Animation animation) {
-		synchronized (animationsPipeline) {
-			animationsPipeline.remove(animation);
-		}
+		animationsPipelineBuffer.remove(animation);
 	}
 	
 	public void removeBackground(Background background) {
-		synchronized (backgroundsRenderingPipeline) {
-			backgroundsRenderingPipeline.remove(background);
-		}
+		backgroundsRenderingPipelineBuffer.remove(background);
 	}
 	
 	public GameCameraObject getCameraObject() {
@@ -165,38 +164,37 @@ public class Engine implements SurfaceHolder.Callback, OnTouchListener {
 		Matrix projection = cameraObject.getMatrix();
 		
 		//Drawing backgrounds
-		synchronized (backgroundsRenderingPipeline) {
-			for (Iterator<Background> it = backgroundsRenderingPipeline.iterator(); it.hasNext();) {
-				Background back = it.next();
-				
-				Bitmap backgroundBitmap = back.getBitmap();
-				Matrix matrix = new Matrix(back.getMatrix());
-				matrix.postConcat(projection);
-				
-				canvas.drawBitmap(backgroundBitmap, matrix, null);
-			}
+		for (Iterator<Background> it = backgroundsRenderingPipeline.iterator(); it.hasNext();) {
+			Background back = it.next();
+
+			Bitmap backgroundBitmap = back.getBitmap();
+			Matrix matrix = new Matrix(back.getMatrix());
+			matrix.postConcat(projection);
+
+			canvas.drawBitmap(backgroundBitmap, matrix, null);
 		}
 		
 		//Drawing objects
-		synchronized (objectsRenderingPipeline) {
-			for (Iterator<VisibleGameObject> it = objectsRenderingPipeline.iterator(); it.hasNext();) {
-				VisibleGameObject object = it.next();
+		for (Iterator<VisibleGameObject> it = objectsRenderingPipeline.iterator(); it.hasNext();) {
+			VisibleGameObject object = it.next();
 
-				Sprite sprite = object.getSprite();
-				int frameNum = object.getFrameNum();
+			Sprite sprite = object.getSprite();
+			int frameNum = object.getFrameNum();
 
-				Bitmap spriteBitmap = sprite.getBitmap(frameNum);
+			Bitmap spriteBitmap = sprite.getBitmap(frameNum);
 
-				Matrix matrix = object.getMatrix();
+			Matrix matrix = object.getMatrix();
 
-				matrix.postConcat(projection);
+			matrix.postConcat(projection);
 
-				canvas.drawBitmap(spriteBitmap, matrix, null);
-			}
+			canvas.drawBitmap(spriteBitmap, matrix, null);
 		}
 		
 		
 		//Drawing GUI
+		
+		backgroundsRenderingPipelineBuffer.doUpdate(backgroundsRenderingPipeline);
+		objectsRenderingPipelineBuffer.doUpdate(objectsRenderingPipeline);
 		
 		return canvas;
 	}

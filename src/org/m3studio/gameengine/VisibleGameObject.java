@@ -1,5 +1,8 @@
 package org.m3studio.gameengine;
 
+import org.m3studio.sketchdefense.Rotation;
+import org.m3studio.sketchdefense.Scale;
+
 import android.graphics.Matrix;
 import android.graphics.Rect;
 
@@ -8,10 +11,15 @@ public class VisibleGameObject extends GameObject {
 	private BasicFramesAnimation animation;
 	private int frameNum;
 	
+	//Event Dispatch
+	private boolean isTouched;
+	
 	public VisibleGameObject(Sprite sprite, Vector position, float z) {
 		super(position, z);
 		this.sprite = sprite;
 		this.frameNum = 0;
+		this.isTouched = false;
+		
 		animation = new BasicFramesAnimation(0.6f, this, LagrangeInterpolator.class, true);
 	}
 	
@@ -67,6 +75,21 @@ public class VisibleGameObject extends GameObject {
 		return true;
 	}
 	
+	public void touch() {
+		isTouched = true;
+	}
+	
+	@Override
+	public void dispatchEvents() {
+		super.dispatchEvents();
+		
+		if (isTouched) {
+			isTouched = false;
+			
+			onTouch();
+		}
+	}
+	
 	@Override
 	protected void updateMatrix() {
 		Vector spriteCoords = sprite.getCoords();
@@ -79,5 +102,24 @@ public class VisibleGameObject extends GameObject {
 		tempMatrix.postTranslate(position.x, position.y);
 		
 		setMatrix(tempMatrix);
+	}
+	
+	//Events
+	protected void onTouch() {
+		Animation animation;
+		
+		if (Math.random() > 0.5) {
+			animation = new Rotation(
+					(float) ((Math.random() + 0.1) * 10.0f),
+					(Math.random() > 0.5) ? true : false, this,
+					LagrangeInterpolator.class, false);
+		} else {
+			animation = new Scale(
+					(float) ((Math.random() + 0.1) * 10.0f),
+					(float) ((Math.random() + 0.1) * 5.0f), this,
+					LagrangeInterpolator.class, false);
+		}
+		
+		this.getEngine().addAnimation(animation);
 	}
 }

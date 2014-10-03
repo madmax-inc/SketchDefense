@@ -1,17 +1,15 @@
 package org.m3studio.sketchdefense;
 
+import org.m3studio.gameengine.Background;
 import org.m3studio.gameengine.Engine;
-import org.m3studio.gameengine.LagrangeInterpolator;
+import org.m3studio.gameengine.ResourceFactory;
 import org.m3studio.gameengine.Sprite;
-import org.m3studio.gameengine.SpriteFactory;
 import org.m3studio.gameengine.Vector;
 import org.m3studio.gameengine.VisibleGameObject;
 
 import android.app.Activity;
-import android.graphics.Color;
-import android.graphics.Matrix;
 import android.os.Bundle;
-import android.util.Log;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
@@ -20,12 +18,10 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		Engine engine = new Engine(this);
 		
-		Sprite hero = SpriteFactory.getInstance().makeSpriteFromResourceStrip(R.drawable.strip3, 2, 10, 10, new Vector(20, 20));
-		Sprite background = SpriteFactory.getInstance().makeSpriteFromResourceStrip(R.drawable.back, 1, 1, 1, new Vector(0, 0));
+		Sprite hero = ResourceFactory.getInstance().makeSpriteFromResourceStrip(R.drawable.strip3, 2, 10, 10, new Vector(20, 20));
+		Background background = ResourceFactory.getInstance().makeBackgroundFromResource(R.drawable.back, new Vector(0, 0));
 		
-		VisibleGameObject back = new VisibleGameObject(background, new Vector(0.0f, 0.0f), -3.0f);
-		
-		engine.addVisibleGameObject(back);
+		engine.addBackground(background);
 		
 		int count = 15;
 		
@@ -38,6 +34,8 @@ public class MainActivity extends Activity {
 		}
 		
 		setContentView(engine.getView());
+		
+		Toast.makeText(this, "Tap on the sprites in order to have some fun =)", Toast.LENGTH_LONG).show();
 	}
 
 }

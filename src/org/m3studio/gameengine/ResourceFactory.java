@@ -4,17 +4,17 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
-public class SpriteFactory {
+public class ResourceFactory {
 	private Resources resources;
-	private static SpriteFactory instance;
+	private static ResourceFactory instance;
 	
-	private SpriteFactory() {
+	private ResourceFactory() {
 		
 	}
 	
-	public static SpriteFactory getInstance() {
+	public static ResourceFactory getInstance() {
 		if (instance == null)
-			instance = new SpriteFactory();
+			instance = new ResourceFactory();
 		
 		return instance;
 	}
@@ -29,5 +29,13 @@ public class SpriteFactory {
 		Sprite sprite = new Sprite(strip, rows, columns, frames, coords);
 		
 		return sprite;
+	}
+	
+	public Background makeBackgroundFromResource(int id, Vector coords) {
+		Bitmap back = BitmapFactory.decodeResource(resources, id);
+		
+		Background background = new Background(back, coords);
+		
+		return background;
 	}
 }

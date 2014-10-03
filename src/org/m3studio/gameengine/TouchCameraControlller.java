@@ -8,7 +8,8 @@ public class TouchCameraControlller extends TouchHandler {
 	
 	private Vector dragStartPosScreen;
 	private Vector dragStartPosCamera;
-	private float resizeStartDistance;
+	private float resizeStartDistanceScreen;
+	private float resizeStartScaleCamera;
 
 	public TouchCameraControlller(GameCameraObject camera) {
 		this.camera = camera;
@@ -27,21 +28,22 @@ public class TouchCameraControlller extends TouchHandler {
 					float dx = event.getX(1) - event.getX(0);
 					float dy = event.getY(1) - event.getY(0);
 					
-					resizeStartDistance = (float) Math.sqrt(dx * dx + dy * dy);
+					resizeStartDistanceScreen = (float) Math.sqrt(dx * dx + dy * dy);
+					resizeStartScaleCamera = camera.getScale();
 				}
 				break;
 			case STATE_DRAG:
 				if (event.getPointerCount() == 1) {
-					if (event.getAction() == MotionEvent.ACTION_MOVE) {
+					if (event.getActionMasked() == MotionEvent.ACTION_MOVE) {
 						Vector newPos = new Vector(dragStartPosCamera);
 
 						Vector currentPosScreen = new Vector(event.getX(), event.getY());
 						Vector delta = new Vector(currentPosScreen, dragStartPosScreen);
-						delta.multiply(1/camera.getScale());
+						delta.multiply(camera.getScale());
 
 						newPos.add(delta);
 						camera.setPosition(newPos);
-					} else if (event.getAction() == MotionEvent.ACTION_UP) {
+					} else if (event.getActionMasked() == MotionEvent.ACTION_UP) {
 						state = TouchCameraControllerState.STATE_IDLE;
 					}
 				} else if (event.getPointerCount() == 2) {
@@ -49,7 +51,8 @@ public class TouchCameraControlller extends TouchHandler {
 					float dx = event.getX(1) - event.getX(0);
 					float dy = event.getY(1) - event.getY(0);
 					
-					resizeStartDistance = (float) Math.sqrt(dx * dx + dy * dy);
+					resizeStartDistanceScreen = (float) Math.sqrt(dx * dx + dy * dy);
+					resizeStartScaleCamera = camera.getScale();
 				}
 				break;
 			case STATE_RESIZE:
@@ -58,12 +61,16 @@ public class TouchCameraControlller extends TouchHandler {
 					dragStartPosScreen = new Vector(event.getX(), event.getY());
 					dragStartPosCamera = camera.getPosition();
 				} else if (event.getPointerCount() == 2) {
-					float dx = event.getX(1) - event.getX(0);
-					float dy = event.getY(1) - event.getY(0);
-					
-					float resizeCurrentDistance = (float) Math.sqrt(dx * dx + dy * dy);
-					
-					camera.setScale(resizeCurrentDistance / resizeStartDistance);
+					if (event.getActionMasked() == MotionEvent.ACTION_MOVE) {
+						float dx = event.getX(1) - event.getX(0);
+						float dy = event.getY(1) - event.getY(0);
+
+						float resizeCurrentDistance = (float) Math.sqrt(dx * dx + dy * dy);
+
+						camera.setScale(resizeStartScaleCamera * (resizeCurrentDistance / resizeStartDistanceScreen));
+					} else if (event.getActionMasked() == MotionEvent.ACTION_UP) {
+						state = TouchCameraControllerState.STATE_IDLE;
+					}
 				}
 				break;
 		}
