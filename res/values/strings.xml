@@ -2,7 +2,7 @@
 <resources>
 
     <string name="app_name">SketchDefense</string>
-    <string name="hello_world">ЫТЬ</string>
+    <string name="hello_world">Тест</string>
     <string name="action_settings">Settings</string>
 
 </resources>
