@@ -5,15 +5,13 @@ import java.util.ArrayList;
 public class GameObjectThread extends Thread {
 	private ArrayList<GameObject> gameObjectsList;
 	private CollectionBuffer<GameObject> gameObjectsListBuffer;
-	private Object globalObjectsMutex;
 	private boolean isRunning;
 	private boolean isPaused;
 
-	GameObjectThread(ArrayList<GameObject> gameObjectsList, CollectionBuffer<GameObject> gameObjectsListBuffer, Object globalObjectsMutex) {
+	GameObjectThread(ArrayList<GameObject> gameObjectsList, CollectionBuffer<GameObject> gameObjectsListBuffer) {
 		super();
 		this.gameObjectsList = gameObjectsList;
 		this.gameObjectsListBuffer = gameObjectsListBuffer;
-		this.globalObjectsMutex = globalObjectsMutex;
 		this.isRunning = false;
 		this.isPaused = false;
 	}
@@ -49,18 +47,14 @@ public class GameObjectThread extends Thread {
 			
 			long stepValue = (System.currentTimeMillis() - lastUpdate);
 			lastUpdate = System.currentTimeMillis();
-			
-			synchronized (gameObjectsList) {
-				synchronized (globalObjectsMutex) {
-					int arraySize = gameObjectsList.size();
-					
-					for (int i = 0; i < arraySize; i++) {
-						GameObject o = gameObjectsList.get(i);
-						
-						o.dispatchEvents();
-						o.update(stepValue);
-					}
-				}
+
+			int arraySize = gameObjectsList.size();
+
+			for (int i = 0; i < arraySize; i++) {
+				GameObject o = gameObjectsList.get(i);
+
+				o.dispatchEvents();
+				o.update(stepValue);
 			}
 			
 			gameObjectsListBuffer.doUpdate(gameObjectsList);

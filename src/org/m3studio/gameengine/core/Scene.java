@@ -9,6 +9,10 @@ public abstract class Scene extends Thread {
 		this.engine = engine;
 	}
 	
+	protected final Engine getEngine() {
+		return engine;
+	}
+	
 	protected abstract void onSceneLoad();
 	protected abstract void onSceneRun();
 	protected abstract void onSceneEnd();

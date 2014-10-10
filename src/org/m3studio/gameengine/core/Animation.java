@@ -47,9 +47,8 @@ public abstract class Animation {
 	public final void update(long step) {
 		currentTime += (float) step / 1000.0f;
 		
-		if (currentTime < endingTime)
-			step();
-		else {
+		step();
+		if (currentTime > endingTime) {
 			if (isLooped)
 				currentTime = 0.0f;
 			else

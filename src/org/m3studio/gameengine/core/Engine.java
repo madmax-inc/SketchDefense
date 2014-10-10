@@ -33,11 +33,12 @@ public class Engine implements SurfaceHolder.Callback, OnTouchListener {
 	private CollectionBuffer<GameObject> gameObjectsPipelineBuffer;
 	private CollectionBuffer<Animation> animationsPipelineBuffer;
 	
-	private Object globalObjectsMutex;
-	
 	private GameCameraObject cameraObject;
 	
 	private ArrayList<TouchHandler> touchHandlers;
+	
+	private boolean limitFps;
+	private int fpsLimit;
 	
 	private DrawingThread drawingThread;
 	private GameObjectThread gameObjectThread;
@@ -75,9 +76,6 @@ public class Engine implements SurfaceHolder.Callback, OnTouchListener {
 		gameObjectsPipelineBuffer = new CollectionBuffer<GameObject>();
 		animationsPipelineBuffer = new CollectionBuffer<Animation>();
 		
-		//Creating objects mutex
-		globalObjectsMutex = new Object();
-		
 		//Creating camera object
 		cameraObject = new GameCameraObject();
 		addGameObject(cameraObject);
@@ -87,21 +85,15 @@ public class Engine implements SurfaceHolder.Callback, OnTouchListener {
 		touchHandlers.add(new GameObjectTouchHandler(objectsRenderingPipeline));
 		touchHandlers.add(new TouchCameraControlller(cameraObject));
 		
-		//Creating threads
-		drawingThread = new DrawingThread(this, limitFps, fpsLimit);
-		gameObjectThread = new GameObjectThread(gameObjectsPipeline, gameObjectsPipelineBuffer, globalObjectsMutex);
-		animationThread = new AnimationThread(animationsPipeline, animationsPipelineBuffer, globalObjectsMutex);
-		
-		drawingThread.setPriority(Thread.MAX_PRIORITY);
-		gameObjectThread.setPriority(Thread.MIN_PRIORITY);
-		animationThread.setPriority(Thread.MIN_PRIORITY);
+		this.limitFps = limitFps;
+		this.fpsLimit = fpsLimit;
 		
 		//Setting dummy color to fill the screen
 		this.dummyColor = dummyColor;
 	}
 	
 	public Engine(Context context) {
-		this(context, false, Color.BLACK, 50);
+		this(context, true, Color.BLACK, 35);
 	}
 	
 	
@@ -158,8 +150,8 @@ public class Engine implements SurfaceHolder.Callback, OnTouchListener {
 		return cameraObject;
 	}
 	
-	public Canvas redraw(Canvas canvas) {
-		//Filling all the screnn with dummy paint
+	public void redraw(Canvas canvas) {
+		//Filling all the screen with dummy paint
 		canvas.drawColor(dummyColor);
 		
 		//Creating projection matrix
@@ -170,7 +162,7 @@ public class Engine implements SurfaceHolder.Callback, OnTouchListener {
 			Background back = it.next();
 
 			Bitmap backgroundBitmap = back.getBitmap();
-			Matrix matrix = new Matrix(back.getMatrix());
+			Matrix matrix = back.getMatrix();
 			matrix.postConcat(projection);
 
 			canvas.drawBitmap(backgroundBitmap, matrix, null);
@@ -192,10 +184,10 @@ public class Engine implements SurfaceHolder.Callback, OnTouchListener {
 		
 		//Drawing GUI
 		
+		
+		//Updating rendering pipelines
 		backgroundsRenderingPipelineBuffer.doUpdate(backgroundsRenderingPipeline);
 		objectsRenderingPipelineBuffer.doUpdate(objectsRenderingPipeline);
-		
-		return canvas;
 	}
 	
 
@@ -207,7 +199,15 @@ public class Engine implements SurfaceHolder.Callback, OnTouchListener {
 
 	@Override
 	public void surfaceCreated(SurfaceHolder arg0) {
-		// TODO Auto-generated method stub
+		//Creating threads
+		drawingThread = new DrawingThread(this, limitFps, fpsLimit);
+		gameObjectThread = new GameObjectThread(gameObjectsPipeline, gameObjectsPipelineBuffer);
+		animationThread = new AnimationThread(animationsPipeline, animationsPipelineBuffer);
+		
+		drawingThread.setPriority(Thread.MAX_PRIORITY);
+		gameObjectThread.setPriority(Thread.MIN_PRIORITY);
+		animationThread.setPriority(Thread.MIN_PRIORITY);
+		
 		drawingThread.start();
 		gameObjectThread.start();
 		animationThread.start();

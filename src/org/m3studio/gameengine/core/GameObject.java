@@ -6,7 +6,6 @@ import android.graphics.Matrix;
 
 public class GameObject implements Comparable<GameObject> {
 	private Engine engine;
-	private Matrix matrix;
 	
 	private Vector position;
 	private float scale;
@@ -27,7 +26,6 @@ public class GameObject implements Comparable<GameObject> {
 	private float dZ;
 	
 	public GameObject(Vector position, float z) {
-		this.matrix = new Matrix();
 		this.position = position;
 		this.scale = 1.0f;
 		this.angle = 0.0f;
@@ -55,7 +53,6 @@ public class GameObject implements Comparable<GameObject> {
 	}
 	
 	public final void setEngine(Engine engine) {
-		updateMatrix();
 		this.engine = engine;
 	}
 	
@@ -64,7 +61,13 @@ public class GameObject implements Comparable<GameObject> {
 	}
 	
 	public final Vector getPosition() {
-		return new Vector(position);
+		Vector result;
+		
+		synchronized (position) {
+			result = new Vector(position);
+		}
+		
+		return result;
 	}
 	
 	public final float getScale() {
@@ -79,15 +82,26 @@ public class GameObject implements Comparable<GameObject> {
 		return z;
 	}
 	
-	public final Matrix getMatrix() {
-		return new Matrix(matrix);
+	public Matrix getMatrix() {
+		Matrix matrix = new Matrix();
+		
+		matrix.postScale(scale, scale);
+		matrix.postRotate((float) Math.toDegrees(angle));
+		
+		synchronized (position) {
+			matrix.postTranslate(position.x, position.y);
+		}
+		
+		return matrix;
 	}
 	
 	public final void setPosition(Vector position) {
-		Vector dr = new Vector(position, this.position);
-		dPos.add(dr);
+		synchronized (this.position) {
+			Vector dr = new Vector(position, this.position);
+			dPos.add(dr);
 		
-		this.position = position;
+			this.position = position;
+		}
 		
 		positionChanged = true;
 	}
@@ -118,20 +132,7 @@ public class GameObject implements Comparable<GameObject> {
 		
 		zChanged = true;
 	}
-	
-	public final void setMatrix(Matrix matrix) {
-		this.matrix = matrix;
-	}
-	
-	protected void updateMatrix() {
-		Matrix tempMatrix = new Matrix();
-		
-		tempMatrix.postScale(scale, scale);
-		tempMatrix.postRotate((float) Math.toDegrees(angle));
-		tempMatrix.postTranslate(position.x, position.y);
-		
-		setMatrix(tempMatrix);
-	}
+
 	
 	public void disableEventDispatch() {
 		if (!this.eventDispatchEnabled)
@@ -144,9 +145,28 @@ public class GameObject implements Comparable<GameObject> {
 		if (this.eventDispatchEnabled)
 			return;
 		
-		onMultipleChanges(dPos, dScale, dAngle, dZ);
+		Vector dPosSnapshot;
+		
+		synchronized (position) {
+			dPosSnapshot = new Vector(dPos);
+		}
+		
+		onMultipleChanges(dPosSnapshot, dScale, dAngle, dZ);
 		
 		this.eventDispatchEnabled = true;
+		
+		synchronized (position) {
+			dPos = new Vector(0, 0);
+		}
+		
+		dScale = 0.0f;
+		dAngle = 0.0f;
+		dZ = 0.0f;
+		
+		positionChanged = false;
+		scaleChanged = false;
+		angleChanged = false;
+		zChanged = false;
 	}
 	
 	public void dispatchEvents() {
@@ -154,10 +174,17 @@ public class GameObject implements Comparable<GameObject> {
 			return;
 		
 		if (positionChanged) {
-			onPositionChanged(dPos);
+			Vector dPosSnapshot;
 			
-			dPos.x = 0.0f;
-			dPos.y = 0.0f;
+			synchronized (position) {
+				dPosSnapshot = new Vector(dPos);
+			}
+			
+			onPositionChanged(dPosSnapshot);
+			
+			synchronized (position) {
+				dPos = new Vector(0, 0);
+			}
 			
 			positionChanged = false;
 		}
@@ -201,15 +228,15 @@ public class GameObject implements Comparable<GameObject> {
 	
 	//Events
 	protected void onPositionChanged(Vector dr) {
-		updateMatrix();
+		
 	}
 	
 	protected void onScaleChanged(float ds) {
-		updateMatrix();
+		
 	}
 	
 	protected void onAngleChanged(float da) {
-		updateMatrix();
+		
 	}
 	
 	protected void onZChanged(float dz) {

@@ -3,6 +3,7 @@ package org.m3studio.gameengine.core;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Typeface;
 
 public class ResourceFactory {
 	private Resources resources;
@@ -37,5 +38,9 @@ public class ResourceFactory {
 		Background background = new Background(back, coords);
 		
 		return background;
+	}
+	
+	public Typeface makeTypefaceFromAsset(String path) {
+		return Typeface.createFromAsset(resources.getAssets(), path);
 	}
 }

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Sketch Defense</string>
+    <string name="button_startGame">Играть</string>
+    <string name="button_shop">Магазин</string>
+    <string name="button_achievements">Достижения</string>
+    <string name="button_leaderboard">Рекорды</string>
+
+</resources>

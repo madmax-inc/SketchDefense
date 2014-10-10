@@ -25,24 +25,24 @@ public class CollectionBuffer<T> {
 	}
 	
 	public void doAdd(Collection<T> collection) {
-		synchronized (toAdd) {
-			//synchronized (collection) {
-			if (toAdd.size() > 0) {
-				collection.addAll(toAdd);
-				toAdd.clear();
+		synchronized (collection) {
+			synchronized (toAdd) {
+				if (toAdd.size() > 0) {
+					collection.addAll(toAdd);
+					toAdd.clear();
+				}
 			}
-			//}
 		}
 	}
 	
 	public void doRemove(Collection<T> collection) {
-		synchronized (toRemove) {
-			//synchronized (collection) {
-			if (toRemove.size() > 0) {
-				collection.removeAll(toRemove);
-				toRemove.clear();
+		synchronized (collection) {
+			synchronized (toRemove) {
+				if (toRemove.size() > 0) {
+					collection.removeAll(toRemove);
+					toRemove.clear();
+				}
 			}
-			//}
 		}
 	}
 	

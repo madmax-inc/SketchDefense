@@ -12,7 +12,7 @@ public class GameCameraObject extends GameObject {
 	}
 	
 	@Override
-	protected void updateMatrix() {
+	public Matrix getMatrix() {
 		Vector position = getPosition();
 		float scale = getScale();
 		
@@ -22,6 +22,6 @@ public class GameCameraObject extends GameObject {
 		projection.postRotate((float)Math.toDegrees(-getAngle()));
 		projection.postTranslate(-position.x, -position.y);
 		
-		this.setMatrix(projection);
+		return projection;
 	}
 }

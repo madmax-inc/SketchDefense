@@ -13,7 +13,7 @@ public abstract class VisibleGameObject extends GameObject {
 		this.isTouched = false;
 	}
 	
-	public VisibleGameObject(Sprite sprite) {
+	public VisibleGameObject() {
 		this(new Vector(0, 0), 0.0f);
 	}
 	
@@ -31,9 +31,9 @@ public abstract class VisibleGameObject extends GameObject {
 		super.dispatchEvents();
 		
 		if (isTouched) {
-			isTouched = false;
-			
 			onTouch();
+			
+			isTouched = false;
 		}
 	}
 	

@@ -1,6 +1,7 @@
 package org.m3studio.gameengine.core;
 
 import android.graphics.Canvas;
+import android.util.Log;
 import android.view.SurfaceHolder;
 
 public class DrawingThread extends Thread {
@@ -59,6 +60,8 @@ public class DrawingThread extends Thread {
 		long redrawTime = 0L;
 		long redrawInterval = 0L;
 		
+		long lastFreeze = 0L;
+		
 		if (limitFps) {
 			redrawInterval = 1000L/fpsLimit;
 		}
@@ -78,11 +81,34 @@ public class DrawingThread extends Thread {
 					}
 			}
 			
-			canvas = holder.lockCanvas();
-			synchronized (holder) {
-				canvas = engine.redraw(canvas);
-
-				holder.unlockCanvasAndPost(canvas);
+			canvas = null;
+			try {
+				canvas = holder.lockCanvas(null);
+				
+				long timeStart = System.currentTimeMillis();
+				
+				synchronized (holder) {
+					engine.redraw(canvas);
+				}
+				
+				long duration = System.currentTimeMillis() - timeStart;
+				float fps = 1000.0f / (float) duration;
+				
+				if (fps < 30.0f) {
+					Log.e("FREEZE", "Low fps = " + String.valueOf(fps) + "!");
+					
+					if (lastFreeze != 0L) {
+						Log.e("FREEZE", "Ms since last freeze: " + String.valueOf(System.currentTimeMillis() - lastFreeze));
+					}
+					
+					lastFreeze = System.currentTimeMillis();
+				}
+			} catch (NullPointerException e) {
+				Log.e("QQQ", "Null Pointer!");
+				e.printStackTrace();
+			} finally {
+				if (canvas != null)
+					holder.unlockCanvasAndPost(canvas);
 			}
 			
 			redrawTime = System.currentTimeMillis();
