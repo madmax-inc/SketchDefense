@@ -14,7 +14,8 @@
         android:layout_centerVertical="true"
         android:layout_marginLeft="25dp"
         android:background="@drawable/button_menu"
-        android:text="@string/button_startGame" />
+        android:text="@string/button_startGame"
+        android:onClick="onStartGame" />
 
     <Button
         android:id="@+id/button_shop"

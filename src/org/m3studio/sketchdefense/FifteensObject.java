@@ -1,9 +1,11 @@
 package org.m3studio.sketchdefense;
 
+import org.m3studio.gameengine.core.EventDispatcher.GameObjectEvent;
 import org.m3studio.gameengine.core.Vector;
 import org.m3studio.gameengine.core.VisibleGameObject;
 import org.m3studio.gameengine.utils.LagrangeInterpolator;
 import org.m3studio.gameengine.utils.PositionAnimation;
+import org.m3studio.gameengine.core.EventDispatcher;
 
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
@@ -15,7 +17,7 @@ import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.util.Log;
 
-public class FifteensObject extends VisibleGameObject {
+public class FifteensObject extends VisibleGameObject implements EventDispatcher.EventListener {
 	private FifteensScene scene;
 	private FifteensPoint fifteensPosition;
 	private int value;
@@ -35,6 +37,8 @@ public class FifteensObject extends VisibleGameObject {
 		this.scene = scene;
 		
 		createBitmap();
+		
+		dispatcher.addListener(this);
 	}
 
 	private void createBitmap() {
@@ -98,19 +102,21 @@ public class FifteensObject extends VisibleGameObject {
 	
 	//Events
 	@Override
-	protected void onTouch() {
-		Log.d("Touched!", String.valueOf(fifteensPosition.i) + " " + String.valueOf(fifteensPosition.j));
-		
-		FifteensPoint movement = scene.getDummyPointLocation();
-		
-		if (fifteensPosition.isNeighbor(movement)) {
-			//Swap the objects
-			scene.swap(fifteensPosition, movement);
+	public void handleEvent(GameObjectEvent event) {
+		if (event.isChanged("Touch")) {
+			Log.d("Touched!", String.valueOf(fifteensPosition.i) + " " + String.valueOf(fifteensPosition.j));
 			
-			FifteensObject dummyObject = scene.getDummyObject();
-			
-			dummyObject.moveTo(fifteensPosition);
-			this.moveTo(movement);
+			FifteensPoint movement = scene.getDummyPointLocation();
+
+			if (fifteensPosition.isNeighbor(movement)) {
+				// Swap the objects
+				scene.swap(fifteensPosition, movement);
+
+				FifteensObject dummyObject = scene.getDummyObject();
+
+				dummyObject.moveTo(fifteensPosition);
+				this.moveTo(movement);
+			}
 		}
 	}
 

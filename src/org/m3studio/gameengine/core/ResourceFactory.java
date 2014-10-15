@@ -4,13 +4,19 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
+import java.util.HashMap;
 
 public class ResourceFactory {
+	//Resources
 	private Resources resources;
+	
+	//Object pools
+	private HashMap<Class<? extends Object>, ObjectPool> objectPool;
+	
 	private static ResourceFactory instance;
 	
 	private ResourceFactory() {
-		
+		objectPool = new HashMap<Class<? extends Object>, ObjectPool>();
 	}
 	
 	public static ResourceFactory getInstance() {
@@ -19,6 +25,8 @@ public class ResourceFactory {
 		
 		return instance;
 	}
+	
+	//Resources
 	
 	public void setResources(Resources res) {
 		this.resources = res;
@@ -42,5 +50,18 @@ public class ResourceFactory {
 	
 	public Typeface makeTypefaceFromAsset(String path) {
 		return Typeface.createFromAsset(resources.getAssets(), path);
+	}
+	
+	//Object pools
+	public Object obtainObject(Class<? extends Object> classObject) {
+		if (!objectPool.containsKey(classObject)) {
+			objectPool.put(classObject, new ObjectPool(classObject));
+		}
+		
+		return objectPool.get(classObject).obtainObject();
+	}
+	
+	public void releaseObject(Object obj) {
+		objectPool.get(obj.getClass()).releaseObject(obj);
 	}
 }

@@ -16,12 +16,14 @@ public class GameCameraObject extends GameObject {
 		Vector position = getPosition();
 		float scale = getScale();
 		
-		Matrix projection = new Matrix();
+		transformationMatrix.reset();
 		
-		projection.postScale(1.0f/scale, 1.0f/scale);
-		projection.postRotate((float)Math.toDegrees(-getAngle()));
-		projection.postTranslate(-position.x, -position.y);
+		transformationMatrix.postScale(1.0f/scale, 1.0f/scale);
+		transformationMatrix.postRotate((float)Math.toDegrees(-getAngle()));
+		transformationMatrix.postTranslate(-position.x, -position.y);
 		
-		return projection;
+		ResourceFactory.getInstance().releaseObject(position);
+		
+		return transformationMatrix;
 	}
 }

@@ -181,7 +181,6 @@ public class Engine implements SurfaceHolder.Callback, OnTouchListener {
 			canvas.drawBitmap(objectBitmap, matrix, null);
 		}
 		
-		
 		//Drawing GUI
 		
 		
@@ -240,7 +239,8 @@ public class Engine implements SurfaceHolder.Callback, OnTouchListener {
 		
 		//Map all the points to its scene coordinates
 		Matrix inverse = new Matrix();
-		cameraObject.getMatrix().invert(inverse);
+		Matrix direct = cameraObject.getMatrix();
+		direct.invert(inverse);
 		
 		float posArray[] = new float[2 * pointersCount];
 		

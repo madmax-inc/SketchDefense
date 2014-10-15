@@ -8,6 +8,8 @@ import org.m3studio.gameengine.core.Vector;
 public class PositionAnimation extends Animation {
 	private Interpolator xInterpolator;
 	private Interpolator yInterpolator;
+	
+	private Vector animationVector;
 
 	public PositionAnimation(Vector start, Vector finish, float animationTime, GameObject target, Class<? extends Interpolator> interpolationBuilder, boolean isLooped) {
 		super(target, interpolationBuilder, isLooped);
@@ -22,11 +24,16 @@ public class PositionAnimation extends Animation {
 		this.yInterpolator.addPoint(new Vector(animationTime, finish.y));
 		
 		this.setEndingTime(animationTime);
+		
+		this.animationVector = new Vector();
 	}
 
 	@Override
 	public void step() {
-		getTarget().setPosition(new Vector(xInterpolator.interpolate(getCurrentTime()), yInterpolator.interpolate(getCurrentTime())));
+		animationVector.x = xInterpolator.interpolate(getCurrentTime());
+		animationVector.y = yInterpolator.interpolate(getCurrentTime());
+		
+		getTarget().setPosition(animationVector);
 	}
 
 }

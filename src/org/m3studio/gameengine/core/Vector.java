@@ -19,6 +19,10 @@ public class Vector {
 		this.y = b.y - a.y;
 	}
 	
+	public Vector() {
+		this(0.0f, 0.0f);
+	}
+	
 	public double getLength() {
 		return Math.sqrt(x * x + y * y);
 	}
@@ -30,6 +34,11 @@ public class Vector {
 		y /= d;
 	}
 	
+	public void set(Vector b) {
+		this.x = b.x;
+		this.y = b.y;
+	}
+	
 	public void multiply(float b) {
 		x *= b;
 		y *= b;
@@ -38,6 +47,11 @@ public class Vector {
 	public void add(Vector b) {
 		this.x += b.x;
 		this.y += b.y;
+	}
+	
+	public void subtract(Vector b) {
+		this.x -= b.x;
+		this.y -= b.y;
 	}
 	
 	public float dotProduct(Vector b) {
