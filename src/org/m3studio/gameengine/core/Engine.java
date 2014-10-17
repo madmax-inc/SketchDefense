@@ -3,21 +3,47 @@ package org.m3studio.gameengine.core;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.TreeSet;
-
-import org.m3studio.gameengine.utils.TouchCameraControlller;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
+import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnTouchListener;
+import android.view.WindowManager;
 
-public class Engine implements SurfaceHolder.Callback, OnTouchListener {
+/**
+ * @author madmax
+ * @version 0.2 beta
+ * <p>Engine is the base class, representing M3Studio 2D Game Engine.
+ * In order to write the game, you must create one instance of Engine.</p>
+ * 
+ * <p>It contains 4 pipelines to handle the game state:</p>
+ * <ol>
+ * <li>The Rendering Pipeline - holds all the game objects to be rendered.</li>
+ * <li>The Game Objects Pipeline - holds all the objects, that needs to recieve ingame events.</li>
+ * <li>The Backgrounds Pipeline - holds all the backgrounds to be rendered.</li>
+ * <li>The Animations Pipeline - holds all animations to be performed.</li>
+ * </ol>
+ * 
+ * <p>An access to the pipelines is granted with corresponding methods:</p>
+ * <ul>
+ * <li>{@link #addVisibleGameObject()}</li>
+ * <li>{@link #addGameObject()}</li>
+ * <li>{@link #addBackground()}</li>
+ * <li>{@link #addAnimation()}</li>
+ * <li>{@link #removeVisibleGameObject()}</li>
+ * <li>{@link #removeGameObject()}</li>
+ * <li>{@link #removeBackground()}</li>
+ * <li>{@link #removeAnimation()}</li>
+ * </ul>
+ */
+public final class Engine implements SurfaceHolder.Callback, OnTouchListener {
 	//Collections
 	private TreeSet<VisibleGameObject> objectsRenderingPipeline;
 	private TreeSet<Background> backgroundsRenderingPipeline;
@@ -50,6 +76,13 @@ public class Engine implements SurfaceHolder.Callback, OnTouchListener {
 	private SurfaceHolder holder;
 	private Context context;
 	
+	/**
+	 * <p>Creates a Game Engine with specified parameters</p>
+	 * @param context Context in which Engine is executed (ex. Activity, Service, e.t.c)
+	 * @param limitFps Set this to true in order to limit fps by {@link fpsLimit}
+	 * @param dummyColor Dummy color to repaint the visible surface by default
+	 * @param fpsLimit Fps limit
+	 */
 	public Engine(Context context, boolean limitFps, int dummyColor, int fpsLimit) {
 		this.context = context;
 		
@@ -77,13 +110,15 @@ public class Engine implements SurfaceHolder.Callback, OnTouchListener {
 		animationsPipelineBuffer = new CollectionBuffer<Animation>();
 		
 		//Creating camera object
-		cameraObject = new GameCameraObject();
+		DisplayMetrics dm = new DisplayMetrics();
+		((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getMetrics(dm);
+		
+		cameraObject = new GameCameraObject(dm);
 		addGameObject(cameraObject);
 		
 		//Creating touch handlers
 		touchHandlers = new ArrayList<TouchHandler>();
 		touchHandlers.add(new GameObjectTouchHandler(objectsRenderingPipeline));
-		touchHandlers.add(new TouchCameraControlller(cameraObject));
 		
 		this.limitFps = limitFps;
 		this.fpsLimit = fpsLimit;
@@ -92,64 +127,132 @@ public class Engine implements SurfaceHolder.Callback, OnTouchListener {
 		this.dummyColor = dummyColor;
 	}
 	
+	/**
+	 * <p>Creates a Game Engine with specified context, Black dummy color ({@link dummyColor}) and with no fps limit</p>
+	 * @param context Context in which Engine is executed (ex. Activity, Service, e.t.c)
+	 */
 	public Engine(Context context) {
-		this(context, true, Color.BLACK, 35);
+		this(context, false, Color.BLACK, 50);
 	}
 	
 	
+	/**
+	 * @return Returns a view in which all the graphics will be rendered
+	 */
 	public SurfaceView getView() {
 		return view;
 	}
 	
+	
+	/**
+	 * @return Returns a SurfaceHolder, associated with internal view
+	 */
 	public SurfaceHolder getHolder() {
 		return holder;
 	}
 	
+	/**
+	 * @return {@link Context} in which engine is executed.
+	 */
+	public Context getContext() {
+		return context;
+	}
+	
+	/**
+	 * <p>Adds a touch handler</p>
+	 * @param handler {@link TouchHandler} that handles touches.
+	 */
+	public void addTouchHandler(TouchHandler handler) {
+		touchHandlers.add(handler);
+	}
+	
 	//Pipelines handle
+	/**
+	 * <p>Adds {@link VisibleGameObject} to the rendering pipeline.</p>
+	 * @param object Object to add.
+	 */
 	public void addVisibleGameObject(VisibleGameObject object) {
 		objectsRenderingPipelineBuffer.add(object);
 		
 		addGameObject(object);
 	}
 	
+	/**
+	 * <p>Adds {@link GameObject} to the game objects pipeline.</p>
+	 * @param object Object to add.
+	 */
 	public void addGameObject(GameObject object) {
 		object.setEngine(this);
 		
 		gameObjectsPipelineBuffer.add(object);
 	}
 	
+	/**
+	 * <p>Adds an {@link Animation} to the animations pipeline.</p>
+	 * @param animation Animation to add.
+	 */
 	public void addAnimation(Animation animation) {
 		animation.setEngine(this);
 		
 		animationsPipelineBuffer.add(animation);
 	}
 	
+	
+	/**
+	 * <p>Adds a {@link Background} to the backgrounds pipeline.</p>
+	 * @param background Background to add
+	 */
 	public void addBackground(Background background) {
 		backgroundsRenderingPipelineBuffer.add(background);
 	}
 	
+	/**
+	 * <p>Removes a {@link VisibleGameObject} from the rendering pipeline.</p>
+	 * @param object Object to remove.
+	 */
 	public void removeVisibleGameObject(VisibleGameObject object) {
 		objectsRenderingPipelineBuffer.remove(object);
 		
 		removeGameObject(object);
 	}
 	
+	/**
+	 * <p>Removes a {@link GameObject} from the game objects pipeline.</p>
+	 * @param object Object to remove.
+	 */
 	public void removeGameObject(GameObject object) {
 		gameObjectsPipelineBuffer.remove(object);
 	}
 	
+	/**
+	 * <p>Removes a {@link Animation} from the animations pipeline.</p>
+	 * @param animation
+	 */
 	public void removeAnimation(Animation animation) {
 		animationsPipelineBuffer.remove(animation);
 	}
 	
+	
+	/**
+	 * <p>Removes a {@link Background} from the backgrounds pipeline.</p>
+	 * @param background
+	 */
 	public void removeBackground(Background background) {
 		backgroundsRenderingPipelineBuffer.remove(background);
 	}
 	
+	
+	/**
+	 * @return Returns the {@link GameCameraObject}, representing a game camera.
+	 */
 	public GameCameraObject getCameraObject() {
 		return cameraObject;
 	}
 	
+	/**
+	 * <p>Method, called from the drawing thread to redraw the screen.</p>
+	 * @param canvas {@link Canvas} to draw on.
+	 */
 	public void redraw(Canvas canvas) {
 		//Filling all the screen with dummy paint
 		canvas.drawColor(dummyColor);

@@ -54,6 +54,7 @@ public class GameObjectThread extends Thread {
 				GameObject o = gameObjectsList.get(i);
 
 				o.dispatchEvents();
+				o.updateComponents(stepValue);
 				o.update(stepValue);
 			}
 			

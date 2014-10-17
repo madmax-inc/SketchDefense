@@ -6,8 +6,12 @@ import java.util.Collections;
 import org.m3studio.gameengine.core.Engine;
 import org.m3studio.gameengine.core.ResourceFactory;
 import org.m3studio.gameengine.core.Scene;
+import org.m3studio.gameengine.utils.BoundaryRestriction;
+import org.m3studio.gameengine.utils.TouchCameraControlller;
 
+import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.widget.Toast;
 
 public class FifteensScene extends Scene {
 	private int matrix[][];
@@ -21,9 +25,9 @@ public class FifteensScene extends Scene {
 	}
 	
 	private boolean checkSolution() {
-		for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < 1; i++) {
 			for (int j = 0; j < 4; j++) {
-				if (matrix[i][j] != (i * 4 + j))
+				if (matrix[i][j] != (i * 4 + j + 1))
 					return false;
 			}
 		}
@@ -34,7 +38,7 @@ public class FifteensScene extends Scene {
 	public void swap(FifteensPoint a, FifteensPoint b) {
 		int k = matrix[a.i][a.j];
 		matrix[a.i][a.j] = matrix[b.i][b.j];
-		matrix[b.i][b.j] = k; 
+		matrix[b.i][b.j] = k;
 	}
 	
 	public FifteensObject getDummyObject() {
@@ -86,17 +90,21 @@ public class FifteensScene extends Scene {
 			}
 		}
 		
+		engine.addTouchHandler(new TouchCameraControlller(engine.getCameraObject()));
+		//BoundaryRestriction rest = new BoundaryRestriction(engine.getCameraObject(), new RectF(-2000, -2000, 2000, 2000));
+		//engine.getCameraObject().addEventListener(rest);
 	}
 
 	@Override
 	protected void onSceneRun() {
-		// TODO Auto-generated method stub
-
+		while (!checkSolution()) {
+			
+		}
 	}
 
 	@Override
 	protected void onSceneEnd() {
-		// TODO Auto-generated method stub
+		Toast.makeText(getEngine().getContext(), "You win!", Toast.LENGTH_LONG).show();
 
 	}
 

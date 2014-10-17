@@ -13,7 +13,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
-import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.util.Log;
 
@@ -69,21 +69,11 @@ public class FifteensObject extends VisibleGameObject implements EventDispatcher
 	}
 
 	@Override
-	public Rect getBoundingRect() {
-		Vector position = getPosition();
-		float scale = getScale();
-		
-		Rect r = new Rect(0, 0, size, size);
-		
-		r.left *= scale;
-		r.top *= scale;
-		r.right *= scale;
-		r.bottom *= scale;
-		
-		r.left += position.x;
-		r.top += position.y;
-		r.right += position.x;
-		r.bottom += position.y;
+	public RectF getBoundingRect() {
+		RectF r = new RectF(0, 0, size, size);
+
+		getMatrix();
+		transformationMatrix.mapRect(r);
 		
 		return r;
 	}
@@ -118,6 +108,11 @@ public class FifteensObject extends VisibleGameObject implements EventDispatcher
 				this.moveTo(movement);
 			}
 		}
+	}
+
+	@Override
+	public void update(long step) {
+		
 	}
 
 }

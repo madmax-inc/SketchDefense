@@ -1,6 +1,7 @@
 package org.m3studio.gameengine.utils;
 
 import org.m3studio.gameengine.core.GameObjectComponent;
+import org.m3studio.gameengine.core.ResourceFactory;
 import org.m3studio.gameengine.core.Vector;
 
 public class Kinematics extends GameObjectComponent {
@@ -10,11 +11,14 @@ public class Kinematics extends GameObjectComponent {
 		this.velocity = velocity;
 	}
 	
+	/**
+	 * @return Vector, obtained through {@link ResourceFactory}'s obtainObject method
+	 */
 	public final Vector getVelocity() {
-		Vector v;
+		Vector v = (Vector) ResourceFactory.getInstance().obtainObject(Vector.class);
 		
 		synchronized (velocity) {
-			v = new Vector(velocity);
+			v.set(velocity);
 		}
 		
 		return v;
@@ -22,7 +26,7 @@ public class Kinematics extends GameObjectComponent {
 	
 	public final void setVelocity(Vector velocity) {
 		synchronized (velocity) {
-			this.velocity = velocity;
+			this.velocity.set(velocity);
 		}
 	}
 
@@ -37,6 +41,9 @@ public class Kinematics extends GameObjectComponent {
 		pos.add(v);
 		
 		getGameObject().setPosition(pos);
+		
+		ResourceFactory.getInstance().releaseObject(pos);
+		ResourceFactory.getInstance().releaseObject(v);
 	}
 
 }

@@ -1,14 +1,19 @@
 package org.m3studio.gameengine.core;
 
 import android.graphics.Matrix;
+import java.util.LinkedList;
 
-public class GameObject implements Comparable<GameObject> {
+import org.m3studio.gameengine.core.EventDispatcher.EventListener;
+
+public abstract class GameObject implements Comparable<GameObject> {
 	private Engine engine;
 	
 	private Vector position;
 	private float scale;
 	private float angle;
 	private float z;
+	
+	private LinkedList<GameObjectComponent> components;
 	
 	protected Matrix transformationMatrix;
 	
@@ -20,6 +25,7 @@ public class GameObject implements Comparable<GameObject> {
 		this.angle = 0.0f;
 		this.z = z;
 		
+		this.components = new LinkedList<GameObjectComponent>();
 		this.transformationMatrix = new Matrix();
 		
 		this.dispatcher = new EventDispatcher(this);
@@ -103,13 +109,28 @@ public class GameObject implements Comparable<GameObject> {
 		dispatcher.setChanged("Z");
 	}
 	
+	public final void addComponent(GameObjectComponent component) {
+		component.setGameObject(this);
+		components.add(component);
+	}
+	
+	public final void addEventListener(EventListener listener) {
+		dispatcher.addListener(listener);
+	}
+	
 	public final void dispatchEvents() {
 		dispatcher.invokeEvent();
 	}
 	
-	public void update(long step) {
-
+	public final void updateComponents(long step) {
+		int componentsCount = components.size();
+		
+		for (int i = 0; i < componentsCount; i++) {
+			components.get(i).update(step);
+		}
 	}
+	
+	public abstract void update(long step);
 
 	@Override
 	public final int compareTo(GameObject another) {

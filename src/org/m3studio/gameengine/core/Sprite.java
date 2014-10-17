@@ -3,6 +3,7 @@ package org.m3studio.gameengine.core;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
+import android.graphics.RectF;
 import android.graphics.Rect;
 
 public class Sprite {
@@ -42,7 +43,7 @@ public class Sprite {
 		return frames.length;
 	}
 	
-	public Rect getBoundingRect() {
-		return new Rect((int) (-coords.x), (int) (-coords.y), (int) (frames[0].getWidth() - coords.x), (int) (frames[0].getHeight() - coords.y));
+	public RectF getBoundingRect() {
+		return new RectF(-coords.x, -coords.y, frames[0].getWidth() - coords.x, frames[0].getHeight() - coords.y);
 	}
 }

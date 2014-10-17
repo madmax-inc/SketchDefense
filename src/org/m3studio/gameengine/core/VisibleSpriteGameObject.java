@@ -5,11 +5,11 @@ import org.m3studio.gameengine.utils.LagrangeInterpolator;
 
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
-import android.graphics.Rect;
+import android.graphics.RectF;
 
 //TODO Implement atomicity for all the methods
 
-public class VisibleSpriteGameObject extends VisibleGameObject {
+public abstract class VisibleSpriteGameObject extends VisibleGameObject {
 	private Sprite sprite;
 	private BasicFramesAnimation animation;
 	private int frameNum;
@@ -40,21 +40,11 @@ public class VisibleSpriteGameObject extends VisibleGameObject {
 	}
 	
 	@Override
-	public Rect getBoundingRect() {
-		Vector position = getPosition();
-		float scale = getScale();
+	public RectF getBoundingRect() {
+		RectF r = sprite.getBoundingRect();
 		
-		Rect r = sprite.getBoundingRect();
-		
-		r.left *= scale;
-		r.top *= scale;
-		r.right *= scale;
-		r.bottom *= scale;
-		
-		r.left += position.x;
-		r.top += position.y;
-		r.right += position.x;
-		r.bottom += position.y;
+		getMatrix();
+		transformationMatrix.mapRect(r);
 		
 		return r;
 	}

@@ -1,9 +1,8 @@
 package org.m3studio.gameengine.core;
 
 import android.graphics.Bitmap;
-import android.graphics.Rect;
 
-public abstract class VisibleGameObject extends GameObject {
+public abstract class VisibleGameObject extends FlatGameObject {
 	public VisibleGameObject(Vector position, float z) {
 		super(position, z);
 	}
@@ -13,7 +12,6 @@ public abstract class VisibleGameObject extends GameObject {
 	}
 	
 	public abstract Bitmap getBitmap(); 
-	public abstract Rect getBoundingRect();
 	public abstract boolean isPointInside(Vector position);
 	
 	public void touch() {

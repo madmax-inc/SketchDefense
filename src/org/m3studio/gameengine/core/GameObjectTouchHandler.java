@@ -3,7 +3,7 @@ package org.m3studio.gameengine.core;
 import java.util.Iterator;
 import java.util.TreeSet;
 
-import android.graphics.Rect;
+import android.graphics.RectF;
 import android.view.MotionEvent;
 
 public class GameObjectTouchHandler extends TouchHandler {
@@ -26,7 +26,7 @@ public class GameObjectTouchHandler extends TouchHandler {
 		synchronized (renderingPipeline) {
 			for (Iterator<VisibleGameObject> it = renderingPipeline.descendingIterator(); it.hasNext();) {
 				VisibleGameObject object = it.next();
-				Rect boundingRect = object.getBoundingRect();
+				RectF boundingRect = object.getBoundingRect();
 				
 				Vector innerPos = object.getPosition();
 				Vector insidePos = new Vector(mappedPoints[0], innerPos);
