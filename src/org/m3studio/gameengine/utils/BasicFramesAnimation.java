@@ -13,13 +13,13 @@ public class BasicFramesAnimation extends Animation {
 
 		frameInterpolator = this.makeInterpolator();
 		frameInterpolator.addPoint(new Vector(0.0f, 0.0f));
-		frameInterpolator.addPoint(new Vector(animationTime, target.getSprite().getTotalFrames()));
+		frameInterpolator.addPoint(new Vector(animationTime, target.getSprite().getTotalFrames() - 1));
 		
 		this.setEndingTime(animationTime);
 	}
 
 	@Override
-	public void step() {
+	protected void step() {
 		VisibleSpriteGameObject object = (VisibleSpriteGameObject) this.getTarget();
 		object.setFrameNum((int) frameInterpolator.interpolate(this.getCurrentTime()));
 	}

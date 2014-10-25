@@ -7,20 +7,17 @@ import java.util.ArrayList;
  * <p>Class that handles all the operations with the Animations Pipeline and updates all the animations.</p>
  */
 public class AnimationThread extends Thread {
-	private ArrayList<Animation> animationsList;
-	private CollectionBuffer<Animation> animationsListBuffer;
+	private CollectionHandler<Animation> animationsHandler;
 	private boolean isRunning;
 	private boolean isPaused;
 
 	/**
 	 * <p>Creates new thread</p>
-	 * @param animationsList Animation Pipeline to handle
-	 * @param animationsListBuffer {@link CollectionBuffer} which interacts with {@link Engine} to make interaction with the Animation Pipeline more predictable.
+	 * @param animationsHandler {@link CollectionHandler} which handles the underlying collection access
 	 */
-	AnimationThread(ArrayList<Animation> animationsList, CollectionBuffer<Animation> animationsListBuffer) {
+	AnimationThread(CollectionHandler<Animation> animationsHandler) {
 		super();
-		this.animationsList = animationsList;
-		this.animationsListBuffer = animationsListBuffer;
+		this.animationsHandler = animationsHandler;
 		this.isRunning = false;
 		this.isPaused = false;
 	}
@@ -59,6 +56,7 @@ public class AnimationThread extends Thread {
 	@Override
 	public void run() {
 		long lastUpdate = System.currentTimeMillis();
+		ArrayList<Animation> animations = (ArrayList<Animation>) animationsHandler.getCollection();
 		
 		while (isRunning) {
 			while (isPaused)
@@ -70,15 +68,17 @@ public class AnimationThread extends Thread {
 			long stepValue = (System.currentTimeMillis() - lastUpdate);
 			lastUpdate = System.currentTimeMillis();
 
-			int arraySize = animationsList.size();
+			animationsHandler.getReadLock().lock();
+			
+			int arraySize = animations.size();
 
 			for (int i = 0; i < arraySize; i++) {
-				Animation o = animationsList.get(i);
+				Animation o = animations.get(i);
 
 				o.update(stepValue);
 			}
 			
-			animationsListBuffer.doUpdate(animationsList);
+			animationsHandler.getReadLock().unlock();
 		}
 	}
 }

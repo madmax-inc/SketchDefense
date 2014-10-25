@@ -12,10 +12,7 @@ public class GameActivity extends Activity {
 		
 		Engine engine = new Engine(this);
 		
-		FifteensScene scene = new FifteensScene(engine);
-		
 		setContentView(engine.getView());
-		scene.start();
 	}
 	
 }

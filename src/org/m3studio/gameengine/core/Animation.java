@@ -28,14 +28,14 @@ public abstract class Animation {
 		this.endingTime = 0.0f;
 	}
 	
-	public void setEngine(Engine engine) {
+	public final void setEngine(Engine engine) {
 		this.engine = engine;
 	}
 	
 	/**
 	 * @return {@link GameObject} which is associated with animation.
 	 */
-	public GameObject getTarget() {
+	public final GameObject getTarget() {
 		return target;
 	}
 	
@@ -87,5 +87,5 @@ public abstract class Animation {
 	/**
 	 * <p>Method invoked every quant of time to update some of animation target properties.</p>
 	 */
-	public abstract void step();
+	protected abstract void step();
 }

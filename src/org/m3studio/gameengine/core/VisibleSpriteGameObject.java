@@ -43,8 +43,9 @@ public abstract class VisibleSpriteGameObject extends VisibleGameObject {
 	public RectF getBoundingRect() {
 		RectF r = sprite.getBoundingRect();
 		
-		getMatrix();
+		Matrix transformationMatrix = getMatrix();
 		transformationMatrix.mapRect(r);
+		ResourceFactory.getInstance().releaseObject(transformationMatrix);
 		
 		return r;
 	}

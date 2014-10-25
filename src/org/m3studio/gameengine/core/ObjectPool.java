@@ -44,4 +44,8 @@ public class ObjectPool {
 		availableObjects.clear();
 		inUseObjects.clear();
 	}
+	
+	public int getTotalAllocations() {
+		return availableObjects.size() + inUseObjects.size();
+	}
 }

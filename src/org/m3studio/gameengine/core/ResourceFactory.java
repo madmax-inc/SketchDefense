@@ -4,7 +4,9 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
+
 import java.util.HashMap;
+import java.util.Iterator;
 
 public class ResourceFactory {
 	//Resources
@@ -62,6 +64,20 @@ public class ResourceFactory {
 	}
 	
 	public void releaseObject(Object obj) {
+		if (obj == null)
+			return;
+		
 		objectPool.get(obj.getClass()).releaseObject(obj);
 	}
+	
+	public int getAllocatedObjects() {
+		int total = 0;
+		
+		for (Iterator<ObjectPool> it = objectPool.values().iterator(); it.hasNext();) {
+			total += it.next().getTotalAllocations();
+		}
+		
+		return total;
+	}
+	
 }

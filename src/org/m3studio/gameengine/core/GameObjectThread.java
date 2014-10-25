@@ -3,15 +3,13 @@ package org.m3studio.gameengine.core;
 import java.util.ArrayList;
 
 public class GameObjectThread extends Thread {
-	private ArrayList<GameObject> gameObjectsList;
-	private CollectionBuffer<GameObject> gameObjectsListBuffer;
+	private CollectionHandler<GameObject> gameObjectsHandler;
 	private boolean isRunning;
 	private boolean isPaused;
 
-	GameObjectThread(ArrayList<GameObject> gameObjectsList, CollectionBuffer<GameObject> gameObjectsListBuffer) {
+	GameObjectThread(CollectionHandler<GameObject> gameObjectsHandler) {
 		super();
-		this.gameObjectsList = gameObjectsList;
-		this.gameObjectsListBuffer = gameObjectsListBuffer;
+		this.gameObjectsHandler = gameObjectsHandler;
 		this.isRunning = false;
 		this.isPaused = false;
 	}
@@ -37,6 +35,7 @@ public class GameObjectThread extends Thread {
 	@Override
 	public void run() {
 		long lastUpdate = System.currentTimeMillis();
+		ArrayList<GameObject> objects = (ArrayList<GameObject>) gameObjectsHandler.getCollection();
 		
 		while (isRunning) {
 			while (isPaused)
@@ -48,17 +47,18 @@ public class GameObjectThread extends Thread {
 			long stepValue = (System.currentTimeMillis() - lastUpdate);
 			lastUpdate = System.currentTimeMillis();
 
-			int arraySize = gameObjectsList.size();
+			gameObjectsHandler.getReadLock().lock();
+			
+			int arraySize = objects.size();
 
 			for (int i = 0; i < arraySize; i++) {
-				GameObject o = gameObjectsList.get(i);
+				GameObject o = objects.get(i);
 
-				o.dispatchEvents();
 				o.updateComponents(stepValue);
 				o.update(stepValue);
 			}
 			
-			gameObjectsListBuffer.doUpdate(gameObjectsList);
+			gameObjectsHandler.getReadLock().unlock();
 		}
 	}
 }

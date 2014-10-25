@@ -1,56 +1,73 @@
 package org.m3studio.gameengine.core;
 
 import java.util.EventObject;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.Iterator;
 
 public class EventDispatcher {
-	private HashSet<String> changesList;
-	private LinkedList<EventListener> listeners;
+	private HashMap<String, HashSet<EventListener>> handlers;
 	private GameObject source;
 	
 	public EventDispatcher(GameObject source) {
-		this.changesList = new HashSet<String>();
-		this.listeners = new LinkedList<EventListener>();
+		this.handlers = new HashMap<String, HashSet<EventListener>>();
 		this.source = source;
 	}
 	
-	public void addListener(EventListener listener) {
-		listeners.add(listener);
+	public void addListener(String eventName, EventListener listener) {
+		if (!handlers.containsKey(eventName))
+			handlers.put(eventName, new HashSet<EventListener>());
+		
+		handlers.get(eventName).add(listener);
 	}
 	
-	public void setChanged(String what) {
-		changesList.add(what);
-	}
-	
-	public void invokeEvent() {
-		if (changesList.size() == 0)
+	public void removeListener(String eventName, EventListener listener) {
+		if (!handlers.containsKey(eventName))
 			return;
 		
-		GameObjectEvent event = new GameObjectEvent(source, changesList);
-		int listenersCount = listeners.size();
+		handlers.get(eventName).remove(listener);
+	}
+	
+	public void invokeEvent(String eventName) {
+		if (!handlers.containsKey(eventName))
+			return;
 		
-		for (int i = listenersCount - 1; i >= 0; i--) {
-			listeners.get(i).handleEvent(event);
+		HashSet<EventListener> listeners = new HashSet<EventListener>(handlers.get(eventName));
+		
+		Thread eventThread = new Thread(new RunnableEvent(listeners, new GameObjectEvent(source, eventName)));
+		eventThread.start();
+	}
+	
+	private class RunnableEvent implements Runnable {
+		private HashSet<EventListener> listeners;
+		private GameObjectEvent event;
+		
+		public RunnableEvent(HashSet<EventListener> listeners, GameObjectEvent event) {
+			this.listeners = listeners;
+			this.event = event;
+		}
+
+		@Override
+		public void run() {
+			for (Iterator<EventListener> it = listeners.iterator(); it.hasNext();) {
+				it.next().handleEvent(event);
+			}
 		}
 		
-		changesList.clear();
-		
-		return;
 	}
 
 	public class GameObjectEvent extends EventObject {
 		private static final long serialVersionUID = 1L;
-		private HashSet<String> changesList;
+		private String eventName;
 
-		public GameObjectEvent(Object source, HashSet<String> changesList) {
+		public GameObjectEvent(Object source, String eventName) {
 			super(source);
 			
-			this.changesList = changesList;
+			this.eventName = eventName;
 		}
 		
-		public boolean isChanged(String what) {
-			return changesList.contains(what);
+		public String getEventName() {
+			return eventName;
 		}
 		
 	}

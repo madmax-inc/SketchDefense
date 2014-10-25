@@ -1,6 +1,7 @@
 package org.m3studio.gameengine.core;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.TreeSet;
 import android.content.Context;
@@ -9,7 +10,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -44,20 +44,12 @@ import android.view.WindowManager;
  * </ul>
  */
 public final class Engine implements SurfaceHolder.Callback, OnTouchListener {
-	//Collections
-	private TreeSet<VisibleGameObject> objectsRenderingPipeline;
-	private TreeSet<Background> backgroundsRenderingPipeline;
-	//private TreeSet<GuiObject> guiObjectsPipeline;
-	
-	private ArrayList<GameObject> gameObjectsPipeline;
-	private ArrayList<Animation> animationsPipeline;
-	
-	//Collections Buffers
-	private CollectionBuffer<VisibleGameObject> objectsRenderingPipelineBuffer;
-	private CollectionBuffer<Background> backgroundsRenderingPipelineBuffer;
+	//Collections Handlers
+	private CollectionHandler<VisibleGameObject> objectsRenderingHandler;
+	private CollectionHandler<Background> backgroundsRenderingHandler;
 	//private CollectionBuffer<GuiObject> guiObjectsPipelineBuffer;
-	private CollectionBuffer<GameObject> gameObjectsPipelineBuffer;
-	private CollectionBuffer<Animation> animationsPipelineBuffer;
+	private CollectionHandler<GameObject> gameObjectsHandler;
+	private CollectionHandler<Animation> animationsHandler;
 	
 	private GameCameraObject cameraObject;
 	
@@ -84,6 +76,7 @@ public final class Engine implements SurfaceHolder.Callback, OnTouchListener {
 	 * @param fpsLimit Fps limit
 	 */
 	public Engine(Context context, boolean limitFps, int dummyColor, int fpsLimit) {
+		//Init context
 		this.context = context;
 		
 		//Creating SurfaceView
@@ -98,16 +91,21 @@ public final class Engine implements SurfaceHolder.Callback, OnTouchListener {
 		ResourceFactory.getInstance().setResources(context.getResources());
 		
 		//Creating pipelines
-		objectsRenderingPipeline = new TreeSet<VisibleGameObject>();
-		backgroundsRenderingPipeline = new TreeSet<Background>();
-		gameObjectsPipeline = new ArrayList<GameObject>();
-		animationsPipeline = new ArrayList<Animation>();
+		final Comparator<GameObject> zOrderComparator = new Comparator<GameObject>() {
+			@Override
+			public int compare(GameObject lhs, GameObject rhs) {
+				if (lhs.getZ() > rhs.getZ())
+					return 1;
+				else
+					return -1;
+			}
+		};
 		
-		//Creating pipelines buffers
-		objectsRenderingPipelineBuffer = new CollectionBuffer<VisibleGameObject>();
-		backgroundsRenderingPipelineBuffer = new CollectionBuffer<Background>();
-		gameObjectsPipelineBuffer = new CollectionBuffer<GameObject>();
-		animationsPipelineBuffer = new CollectionBuffer<Animation>();
+		//Creating pipeline handlers
+		objectsRenderingHandler = new CollectionHandler<VisibleGameObject>(new TreeSet<VisibleGameObject>(zOrderComparator));
+		backgroundsRenderingHandler = new CollectionHandler<Background>(new TreeSet<Background>(zOrderComparator));
+		gameObjectsHandler = new CollectionHandler<GameObject>(new ArrayList<GameObject>());
+		animationsHandler = new CollectionHandler<Animation>(new ArrayList<Animation>());
 		
 		//Creating camera object
 		DisplayMetrics dm = new DisplayMetrics();
@@ -118,7 +116,7 @@ public final class Engine implements SurfaceHolder.Callback, OnTouchListener {
 		
 		//Creating touch handlers
 		touchHandlers = new ArrayList<TouchHandler>();
-		touchHandlers.add(new GameObjectTouchHandler(objectsRenderingPipeline));
+		touchHandlers.add(new GameObjectTouchHandler(objectsRenderingHandler));
 		
 		this.limitFps = limitFps;
 		this.fpsLimit = fpsLimit;
@@ -132,7 +130,7 @@ public final class Engine implements SurfaceHolder.Callback, OnTouchListener {
 	 * @param context Context in which Engine is executed (ex. Activity, Service, e.t.c)
 	 */
 	public Engine(Context context) {
-		this(context, false, Color.BLACK, 50);
+		this(context, true, Color.BLACK, 50);
 	}
 	
 	
@@ -172,7 +170,7 @@ public final class Engine implements SurfaceHolder.Callback, OnTouchListener {
 	 * @param object Object to add.
 	 */
 	public void addVisibleGameObject(VisibleGameObject object) {
-		objectsRenderingPipelineBuffer.add(object);
+		objectsRenderingHandler.add(object);
 		
 		addGameObject(object);
 	}
@@ -184,7 +182,7 @@ public final class Engine implements SurfaceHolder.Callback, OnTouchListener {
 	public void addGameObject(GameObject object) {
 		object.setEngine(this);
 		
-		gameObjectsPipelineBuffer.add(object);
+		gameObjectsHandler.add(object);
 	}
 	
 	/**
@@ -194,7 +192,7 @@ public final class Engine implements SurfaceHolder.Callback, OnTouchListener {
 	public void addAnimation(Animation animation) {
 		animation.setEngine(this);
 		
-		animationsPipelineBuffer.add(animation);
+		animationsHandler.add(animation);
 	}
 	
 	
@@ -203,7 +201,7 @@ public final class Engine implements SurfaceHolder.Callback, OnTouchListener {
 	 * @param background Background to add
 	 */
 	public void addBackground(Background background) {
-		backgroundsRenderingPipelineBuffer.add(background);
+		backgroundsRenderingHandler.add(background);
 	}
 	
 	/**
@@ -211,7 +209,7 @@ public final class Engine implements SurfaceHolder.Callback, OnTouchListener {
 	 * @param object Object to remove.
 	 */
 	public void removeVisibleGameObject(VisibleGameObject object) {
-		objectsRenderingPipelineBuffer.remove(object);
+		objectsRenderingHandler.remove(object);
 		
 		removeGameObject(object);
 	}
@@ -221,7 +219,7 @@ public final class Engine implements SurfaceHolder.Callback, OnTouchListener {
 	 * @param object Object to remove.
 	 */
 	public void removeGameObject(GameObject object) {
-		gameObjectsPipelineBuffer.remove(object);
+		gameObjectsHandler.remove(object);
 	}
 	
 	/**
@@ -229,7 +227,7 @@ public final class Engine implements SurfaceHolder.Callback, OnTouchListener {
 	 * @param animation
 	 */
 	public void removeAnimation(Animation animation) {
-		animationsPipelineBuffer.remove(animation);
+		animationsHandler.remove(animation);
 	}
 	
 	
@@ -238,7 +236,7 @@ public final class Engine implements SurfaceHolder.Callback, OnTouchListener {
 	 * @param background
 	 */
 	public void removeBackground(Background background) {
-		backgroundsRenderingPipelineBuffer.remove(background);
+		backgroundsRenderingHandler.remove(background);
 	}
 	
 	
@@ -254,6 +252,10 @@ public final class Engine implements SurfaceHolder.Callback, OnTouchListener {
 	 * @param canvas {@link Canvas} to draw on.
 	 */
 	public void redraw(Canvas canvas) {
+		//Getting collections from handlers
+		TreeSet<VisibleGameObject> objects = (TreeSet<VisibleGameObject>) objectsRenderingHandler.getCollection();
+		TreeSet<Background> backgrounds = (TreeSet<Background>) backgroundsRenderingHandler.getCollection();
+		
 		//Filling all the screen with dummy paint
 		canvas.drawColor(dummyColor);
 		
@@ -261,7 +263,8 @@ public final class Engine implements SurfaceHolder.Callback, OnTouchListener {
 		Matrix projection = cameraObject.getMatrix();
 		
 		//Drawing backgrounds
-		for (Iterator<Background> it = backgroundsRenderingPipeline.iterator(); it.hasNext();) {
+		backgroundsRenderingHandler.getReadLock().lock();
+		for (Iterator<Background> it = backgrounds.iterator(); it.hasNext();) {
 			Background back = it.next();
 
 			Bitmap backgroundBitmap = back.getBitmap();
@@ -269,27 +272,39 @@ public final class Engine implements SurfaceHolder.Callback, OnTouchListener {
 			matrix.postConcat(projection);
 
 			canvas.drawBitmap(backgroundBitmap, matrix, null);
+			
+			ResourceFactory.getInstance().releaseObject(matrix);
 		}
+		backgroundsRenderingHandler.getReadLock().unlock();
 		
 		//Drawing objects
-		for (Iterator<VisibleGameObject> it = objectsRenderingPipeline.iterator(); it.hasNext();) {
+		objectsRenderingHandler.getReadLock().lock();
+		for (Iterator<VisibleGameObject> it = objects.iterator(); it.hasNext();) {
 			VisibleGameObject object = it.next();
 
 			Bitmap objectBitmap = object.getBitmap();
+			
+			if (objectBitmap == null)
+				continue;
 
 			Matrix matrix = object.getMatrix();
 
 			matrix.postConcat(projection);
 
 			canvas.drawBitmap(objectBitmap, matrix, null);
+			
+			ResourceFactory.getInstance().releaseObject(matrix);
 		}
+		objectsRenderingHandler.getReadLock().unlock();
+		
+		ResourceFactory.getInstance().releaseObject(projection);
 		
 		//Drawing GUI
 		
-		
-		//Updating rendering pipelines
-		backgroundsRenderingPipelineBuffer.doUpdate(backgroundsRenderingPipeline);
-		objectsRenderingPipelineBuffer.doUpdate(objectsRenderingPipeline);
+	}
+	
+	public float getFPS() {
+		return drawingThread.getFPS();
 	}
 	
 
@@ -303,8 +318,8 @@ public final class Engine implements SurfaceHolder.Callback, OnTouchListener {
 	public void surfaceCreated(SurfaceHolder arg0) {
 		//Creating threads
 		drawingThread = new DrawingThread(this, limitFps, fpsLimit);
-		gameObjectThread = new GameObjectThread(gameObjectsPipeline, gameObjectsPipelineBuffer);
-		animationThread = new AnimationThread(animationsPipeline, animationsPipelineBuffer);
+		gameObjectThread = new GameObjectThread(gameObjectsHandler);
+		animationThread = new AnimationThread(animationsHandler);
 		
 		drawingThread.setPriority(Thread.MAX_PRIORITY);
 		gameObjectThread.setPriority(Thread.MIN_PRIORITY);
@@ -344,6 +359,7 @@ public final class Engine implements SurfaceHolder.Callback, OnTouchListener {
 		Matrix inverse = new Matrix();
 		Matrix direct = cameraObject.getMatrix();
 		direct.invert(inverse);
+		ResourceFactory.getInstance().releaseObject(direct);
 		
 		float posArray[] = new float[2 * pointersCount];
 		
@@ -356,12 +372,18 @@ public final class Engine implements SurfaceHolder.Callback, OnTouchListener {
 		
 		Vector mappedPoints[] = new Vector[pointersCount];
 		
-		for (int i = 0; i < pointersCount; i++)
-			mappedPoints[i] = new Vector(posArray[2 * i], posArray[2 * i + 1]);
+		for (int i = 0; i < pointersCount; i++) {
+			mappedPoints[i] = (Vector) ResourceFactory.getInstance().obtainObject(Vector.class);
+			mappedPoints[i].x = posArray[2 * i];
+			mappedPoints[i].y = posArray[2 * i + 1];
+		}
 		
 		for (int i = 0; i < handlersCount; i++)
 			if (touchHandlers.get(i).handleTouchEvent(event, mappedPoints))
 				break;
+		
+		for (int i = 0; i < pointersCount; i++)
+			ResourceFactory.getInstance().releaseObject(mappedPoints[i]);
 		
 		return true;
 	}

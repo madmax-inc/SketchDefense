@@ -15,6 +15,6 @@ public abstract class VisibleGameObject extends FlatGameObject {
 	public abstract boolean isPointInside(Vector position);
 	
 	public void touch() {
-		dispatcher.setChanged("Touch");
+		dispatcher.invokeEvent("Touch");
 	}
 }

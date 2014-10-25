@@ -1,11 +1,13 @@
 package org.m3studio.gameengine.core;
 
 import android.graphics.Matrix;
+
 import java.util.LinkedList;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.m3studio.gameengine.core.EventDispatcher.EventListener;
 
-public abstract class GameObject implements Comparable<GameObject> {
+public abstract class GameObject {
 	private Engine engine;
 	
 	private Vector position;
@@ -13,9 +15,9 @@ public abstract class GameObject implements Comparable<GameObject> {
 	private float angle;
 	private float z;
 	
-	private LinkedList<GameObjectComponent> components;
+	private ReentrantReadWriteLock lock;
 	
-	protected Matrix transformationMatrix;
+	private LinkedList<GameObjectComponent> components;
 	
 	protected EventDispatcher dispatcher;
 	
@@ -25,8 +27,9 @@ public abstract class GameObject implements Comparable<GameObject> {
 		this.angle = 0.0f;
 		this.z = z;
 		
+		this.lock = new ReentrantReadWriteLock();
+		
 		this.components = new LinkedList<GameObjectComponent>();
-		this.transformationMatrix = new Matrix();
 		
 		this.dispatcher = new EventDispatcher(this);
 	}
@@ -50,9 +53,9 @@ public abstract class GameObject implements Comparable<GameObject> {
 	public final Vector getPosition() {
 		Vector result = (Vector) ResourceFactory.getInstance().obtainObject(Vector.class);
 		
-		synchronized (position) {
-			result.set(position);
-		}
+		lock.readLock().lock();
+		result.set(position);
+		lock.readLock().unlock();
 		
 		return result;
 	}
@@ -70,14 +73,14 @@ public abstract class GameObject implements Comparable<GameObject> {
 	}
 	
 	public Matrix getMatrix() {
+		Matrix transformationMatrix = (Matrix) ResourceFactory.getInstance().obtainObject(Matrix.class);
+		
 		transformationMatrix.reset();
 		
 		Vector positionVal = getPosition();
-		
-		
+
 		transformationMatrix.postScale(scale, scale);
 		transformationMatrix.postRotate((float) Math.toDegrees(angle));
-		
 		transformationMatrix.postTranslate(positionVal.x, positionVal.y);
 		
 		ResourceFactory.getInstance().releaseObject(positionVal);
@@ -86,27 +89,27 @@ public abstract class GameObject implements Comparable<GameObject> {
 	}
 	
 	public final void setPosition(Vector position) {
-		this.position.set(position);
+		dispatcher.invokeEvent("Position");
 		
-		dispatcher.setChanged("Position");
+		this.position.set(position);
 	}
 	
 	public final void setScale(float scale) {
-		this.scale = scale;
+		dispatcher.invokeEvent("Scale");
 		
-		dispatcher.setChanged("Scale");
+		this.scale = scale;
 	}
 	
 	public final void setAngle(float angle) {
-		this.angle = angle;
+		dispatcher.invokeEvent("Angle");
 		
-		dispatcher.setChanged("Angle");
+		this.angle = angle;
 	}
 	
 	public final void setZ(float z) {
-		this.z = z;
+		dispatcher.invokeEvent("Z");
 		
-		dispatcher.setChanged("Z");
+		this.z = z;
 	}
 	
 	public final void addComponent(GameObjectComponent component) {
@@ -114,12 +117,21 @@ public abstract class GameObject implements Comparable<GameObject> {
 		components.add(component);
 	}
 	
-	public final void addEventListener(EventListener listener) {
-		dispatcher.addListener(listener);
+	public final GameObjectComponent getComponentByClass(Class<? extends GameObjectComponent> classObject) {
+		int listSize = components.size();
+		
+		for (int i = 0; i < listSize; i++) {
+			GameObjectComponent comp = classObject.cast(components.get(i));
+			
+			if (comp != null)
+				return comp;
+		}
+		
+		return null;
 	}
 	
-	public final void dispatchEvents() {
-		dispatcher.invokeEvent();
+	public final void addEventListener(String eventName, EventListener listener) {
+		dispatcher.addListener(eventName, listener);
 	}
 	
 	public final void updateComponents(long step) {
@@ -131,12 +143,4 @@ public abstract class GameObject implements Comparable<GameObject> {
 	}
 	
 	public abstract void update(long step);
-
-	@Override
-	public final int compareTo(GameObject another) {
-		if (z > another.z)
-			return 1;
-		else
-			return -1;
-	}
 }

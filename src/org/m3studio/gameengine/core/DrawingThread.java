@@ -9,6 +9,8 @@ public class DrawingThread extends Thread {
 	private boolean limitFps;
 	private int fpsLimit;
 	
+	private float fps;
+	
 	private boolean isRunning;
 	private boolean isPaused;
 	
@@ -52,6 +54,10 @@ public class DrawingThread extends Thread {
 	public synchronized void Resume() {
 		this.isPaused = false;
 	}
+	
+	public float getFPS() {
+		return fps;
+	}
 
 	@Override
 	public void run() {
@@ -92,7 +98,7 @@ public class DrawingThread extends Thread {
 				}
 				
 				long duration = System.currentTimeMillis() - timeStart;
-				float fps = 1000.0f / (float) duration;
+				fps = 1000.0f / (float) duration;
 				
 				if (fps < 30.0f) {
 					Log.e("FREEZE", "Low fps = " + String.valueOf(fps) + "!");

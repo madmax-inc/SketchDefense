@@ -3,7 +3,6 @@ package org.m3studio.gameengine.core;
 import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.util.DisplayMetrics;
-import android.util.Log;
 
 public class GameCameraObject extends FlatGameObject {
 	private DisplayMetrics displayMetrics;
@@ -21,8 +20,14 @@ public class GameCameraObject extends FlatGameObject {
 	public final RectF getBoundingRect() {
 		RectF rect = new RectF(0.0f, 0.0f, displayMetrics.widthPixels, displayMetrics.heightPixels);
 		
-		getMatrix();
-		transformationMatrix.mapRect(rect);
+		Matrix inverse = (Matrix) ResourceFactory.getInstance().obtainObject(Matrix.class);
+		Matrix transformationMatrix = getMatrix();
+		transformationMatrix.invert(inverse);
+		
+		inverse.mapRect(rect);
+		
+		ResourceFactory.getInstance().releaseObject(inverse);
+		ResourceFactory.getInstance().releaseObject(transformationMatrix);
 		
 		return rect;
 	}
@@ -32,8 +37,9 @@ public class GameCameraObject extends FlatGameObject {
 		Vector position = getPosition();
 		float scale = getScale();
 		
-		transformationMatrix.reset();
+		Matrix transformationMatrix = (Matrix) ResourceFactory.getInstance().obtainObject(Matrix.class);
 		
+		transformationMatrix.reset();
 		transformationMatrix.postTranslate(0.5f * displayMetrics.widthPixels, 0.5f * displayMetrics.heightPixels);
 		transformationMatrix.postScale(1.0f/scale, 1.0f/scale);
 		transformationMatrix.postRotate((float)Math.toDegrees(-getAngle()));
